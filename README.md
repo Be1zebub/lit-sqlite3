@@ -6,9 +6,9 @@ adds a easy to use interface for prepared statements:
 ## API
 
 `conn:Query(query, args, opts)`  
-query (string): is command for statement  
-args (table): bind params  
-opts (table):  
+> query (string): is command for statement  
+> args (table): bind params  
+> opts (table):  
   - all (boolean): fetch rows
   - row (boleean): fetch single row
   - value (boolean or key): fetch row, return value by key or next value

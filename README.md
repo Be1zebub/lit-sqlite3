@@ -1,7 +1,7 @@
 QOL fork of [lit-sqlite3](https://github.com/SinisterRectus/lit-sqlite3)
 ============================
 
-adds a easy to use interface for prepared statements: 
+Adds a easy to use interface for prepared statements
 
 ## API
 

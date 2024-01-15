@@ -70,3 +70,11 @@ conn:close()
 ## Documentation
 
 Need more docs? Read lit-sqlite3 readme.md & scilua ljsqlite3 docs
+
+## Plans
+
+`opts.jit_types` - ULL & other jit types is good, but for specific cases.  
+Personally - i dont need it in 90% requests  
+so i think responses should contain lua types while `opts.jit_types ~= true`  
+  
+`conn.defaultOpts` - just another QOL

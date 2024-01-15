@@ -1,74 +1,72 @@
-SQlite3 Interface for [Luvit](https://luvit.io/)
+QOL fork of [lit-sqlite3](https://github.com/SinisterRectus/lit-sqlite3)
 ============================
 
-Pure LuaJIT binding for [SQLite3](http://sqlite.org) databases.
+adds a easy to use interface for prepared statements: 
 
-Forked from [stepelu/lua-ljsqlite3](https://github.com/stepelu/lua-ljsqlite3) by [Stefano Peluchetti](http://scilua.org/index.html).
+## API
 
-Repackaged for lit, Luvit's package manager.
+`conn:Query(query, args, opts)`
+query (string): is command for statement
+args (table): bind params
+opts (table):
+  - all (boolean): fetch rows
+  - row (boleean): fetch single row
+  - value (boolean or key): fetch row, return value by key or next value
+  - insert (boolean): fetch insert id 
 
-## Features
-
-- all SQLite3 types are supported and mapped to LuaJIT types
-- efficient implementation via value-binding methods and prepared statements
-- ability to extend SQLite3 via scalar and aggregate (Lua) callback functions
-- command-line shell feature
-- results by row or by whole table
+## Usage
 
 ```lua
-local sql = require "sqlite3"
-local conn = sql.open("") -- Open a temporary in-memory database.
+local sqlite = require("sqlite3")
+local db = sqlite.open("users.db")
 
--- Execute SQL commands separated by the ';' character:
-conn:exec[[
-CREATE TABLE t(id TEXT, num REAL);
-INSERT INTO t VALUES('myid1', 200);
-]]
+db:Query([[CREATE TABLE IF NOT EXISTS `users` (
+    `id` INTEGER PRIMARY KEY,
+    `steamid` TEXT NOT NULL,
+    `name` TEXT NOT NULL,
+    `registered` INTEGER NOT NULL
+);]]) -- just commit, return nothing
 
--- Prepared statements are supported:
-local stmt = conn:prepare("INSERT INTO t VALUES(?, ?)")
-for i=2,4 do
-  stmt:reset():bind('myid'..i, 200*i):step()
+local users = {}
+
+function users:GetAll()
+	return db:Query("SELECT * FROM `users`;", nil, {all = true}) -- return all rows
 end
 
--- Command-line shell feature which here prints all records:
-conn "SELECT * FROM t"
---> id    num
---> myid1 200
---> myid2 400
---> myid3 600
---> myid4 800
+function users:Find(steamid)
+	return db:Query("SELECT * FROM `users` WHERE `steamid` = ?;", {steamid}, {row = true}) -- return single row
+end
 
-local t = conn:exec("SELECT * FROM t") -- Records are by column.
--- Access to columns via column numbers or names:
-assert(t[1] == t.id)
--- Nested indexing corresponds to the record number:
-assert(t[1][3] == 'myid3')
+function users:Register(steamid, name)
+	return db:Query("INSERT INTO `users` (`steamid`, `name`, `registered`) VALUES (?, ?, ?);", {steamid, name, os.time()}, {insert = true}) -- return insert id
+end
 
--- Convenience function returns multiple values for one record:
-local id, num = conn:rowexec("SELECT * FROM t WHERE id=='myid3'")
-print(id, num) --> myid3 600
+function users:ChangeName(steamid, name)
+	db:Query("UPDATE `users` SET `name` = ? WHERE `steamid` = ?;", {name, steamid}) -- just commit, return nothing
+end
 
--- Custom scalar function definition, aggregates supported as well.
-conn:setscalar("MYFUN", function(x) return x/100 end)
-conn "SELECT MYFUN(num) FROM t"
---> MYFUN(num)
---> 2
---> 4
---> 6
---> 8
+function users:Wipe()
+  db:Query("DELETE FROM `users`;") -- just commit, return nothing
+end
 
-conn:close() -- Close stmt as well.
+p("Wipe", users:Wipe())
+p("Register", users:Register("123", "me"))
+p("GetAll", users:GetAll())
+p("Find", users:Find("123"))
+p("ChangeName", users:ChangeName("123", "me2"))
+p("Find", users:Find("123"))
+
+conn:close()
 ```
 
 ## Install
 
-- Install the lit package:
-```
-lit install SinisterRectus/sqlite3
-```
-- Install [sqlite3](https://sqlite.org/download.html) as a dynamic library (sqlite3.dll, sqlite3.so) to your project directory.
+1. Install sqlite:
+- Linux: `sudo apt-get install sqlite3 libsqlite3-dev` 
+- Windows: https://www.sqlite.org/download.html
+2. Put binaries to your project directory, or add it to a PATH
+3. put lib in `deps` or `libs`
 
 ## Documentation
 
-Refer to the [official documentation](http://scilua.org/ljsqlite3.html).
+Need more docs? Read lit-sqlite3 readme.md & scilua ljsqlite3 docs
